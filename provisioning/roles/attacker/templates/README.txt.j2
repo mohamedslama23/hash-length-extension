@@ -1,0 +1,11 @@
+Hash Length Extension Attack -- lab files
+=========================================
+Web server : http://{{ lab_hostname }}/        (SHA256(key:message) MAC)
+Fixed server: http://{{ lab_hostname }}/v2/     (HMAC-SHA256 MAC)
+Padding check: http://{{ lab_hostname }}/padcheck?myname=<name>&uid=<uid>&padding=<url-encoded padding>
+
+mykey.txt            your uid and MAC key  (format uid:key)
+captured_request.txt a request sent by the SysAdmin, intercepted on the network
+length_ext.c         example length extension program from the SEED lab
+
+Always set myname=<YourName> (no spaces) in every request.

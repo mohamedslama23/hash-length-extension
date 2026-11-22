@@ -1,0 +1,14 @@
+import os
+
+
+class Config(object):
+    LAB_HOME_DIR = os.getcwd() + '/LabHome'
+    KEY_FILE_NAME = 'key.txt'
+    KEY_FILE_DELIMITER = ':'
+    # Per-uid download ACL (anti-shortcut): the student's own uid cannot fetch secret.txt.
+    DOWNLOAD_ACL = {
+        '{{ lab_student_uid }}': ['task1.txt', 'task4.txt'],
+        '{{ lab_admin_uid }}': ['secret.txt'],
+    }
+    STUDENT_UID = '{{ lab_student_uid }}'
+    FLAG_PADDING = '{{ lab_flag2 }}'

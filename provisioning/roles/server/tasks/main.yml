@@ -1,0 +1,72 @@
+# The SEED image ships with Docker + docker-compose. We only ensure the daemon is up,
+# render the per-sandbox lab files into the Labsetup build context, then build & run it.
+
+- name: Ensure Docker is installed (no-op on a stock SEED image)
+  apt:
+    name: [docker.io, docker-compose]
+    state: present
+    update_cache: yes
+  register: docker_pkg
+  failed_when: false
+
+- name: Ensure Docker service is running
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Copy the SEED Labsetup (with lab modifications) to the server
+  copy:
+    src: Labsetup
+    dest: /root/
+    owner: root
+    mode: u=rwX,g=rX,o=rX
+
+- name: Render per-sandbox server config into the build context
+  template:
+    src: config.py.j2
+    dest: /root/Labsetup/image_flask/app/www/config.py
+    mode: '0644'
+
+- name: Write per-sandbox MAC keys (student key given; SysAdmin key hidden)
+  copy:
+    dest: /root/Labsetup/image_flask/app/LabHome/key.txt
+    content: |
+      {{ lab_student_uid }}:{{ lab_student_key }}
+      {{ lab_admin_uid }}:{{ lab_admin_key }}
+    mode: '0644'
+
+- name: Write per-sandbox flag files
+  copy:
+    dest: "/root/Labsetup/image_flask/app/LabHome/{{ item.name }}"
+    content: "{{ item.content }}"
+    mode: '0644'
+  loop:
+    - { name: task1.txt, content: "Congratulations! You get the MAC right.\nFlag: {{ lab_flag1 }}\n" }
+    - { name: secret.txt, content: "TOP SECRET.\nDO NOT DISCLOSE.\nFlag: {{ lab_flag3 }}\n" }
+    - { name: task4.txt, content: "HMAC request accepted.\nFlag: {{ lab_flag4 }}\n" }
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Pick the available compose command
+  shell: "if docker compose version >/dev/null 2>&1; then echo 'docker compose'; else echo 'docker-compose'; fi"
+  register: compose_cmd
+  changed_when: false
+
+- name: Build the lab container
+  command: "{{ compose_cmd.stdout }} build"
+  args:
+    chdir: /root/Labsetup
+
+- name: Start the lab container
+  command: "{{ compose_cmd.stdout }} up -d"
+  args:
+    chdir: /root/Labsetup
+
+- name: Disable SSH password login (students must not log into the server)
+  copy:
+    dest: /etc/ssh/sshd_config.d/99-no-password.conf
+    content: |
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+    mode: '0644'

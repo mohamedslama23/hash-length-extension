@@ -1,0 +1,180 @@
+{
+  "title": "Hash Length Extension Attack",
+  "description": "Forge a valid MAC without the secret key by exploiting SHA256(key||message), then fix the server with HMAC. Based on the SEED Hash Length Extension Attack Lab.",
+  "prerequisites": [
+    "Basic Linux command line",
+    "Hash functions / MAC basics"
+  ],
+  "outcomes": [
+    "Understand why SHA256(key||message) is an insecure MAC",
+    "Construct SHA-256 padding by hand",
+    "Perform a hash length extension attack to forge a MAC",
+    "Explain how HMAC prevents the attack"
+  ],
+  "state": "UNRELEASED",
+  "show_stepper_bar": true,
+  "levels": [
+    {
+      "title": "Introduction",
+      "level_type": "INFO_LEVEL",
+      "order": 0,
+      "estimated_duration": 0,
+      "minimal_possible_solve_time": null,
+      "content": "# Hash Length Extension Attack\n\n* This lab is based on the SEED *Hash Length Extension Attack Lab* by Wenliang Du (CC BY-NC-SA 4.0).\n* The solution of each level is **required** in later levels. Do not skip ahead.\n* Every sandbox has **different flags and keys** - copying another student's flag will not work.\n* This game is for educational purposes only. The story is fictitious.\n\n# Scenario\n\nA web server at `www.seedlab-hashlen.com` executes file commands only if the request carries a valid **MAC**. The developer computed the MAC the naive way: `SHA256(key : message)`. You have an account on it, and you have intercepted a request from the **SysAdmin**. Your goal is to abuse the length extension weakness to read a file you are not allowed to read - and then help the developer fix it with HMAC.\n\nYou work from the **SEED** workstation (`attacker`). All lab files are in `~/hashlen/`."
+    },
+    {
+      "title": "Get Access",
+      "level_type": "ACCESS_LEVEL",
+      "order": 1,
+      "estimated_duration": 0,
+      "minimal_possible_solve_time": null,
+      "passkey": "start",
+      "cloud_content": "Access the sandbox where you will complete all tasks. When connected, submit **`start`**.\n\n### Sandbox access\n1. In the topology overview on the right, right-click on **`attacker`** and click **`Open GUI`**.\n2. Log in with username **`user`** and password **`Password123`**.\n\nAlternatively, connect over SSH (easier copy-paste). See the [documentation](https://docs.platform.cyberrange.cz/user-guide-advanced/sandboxes/sandbox-access/#user-access).\n\nOpen a terminal and read `~/hashlen/README.txt` before starting.",
+      "local_content": "This sandbox has not been tested for use with local sandbox."
+    },
+    {
+      "title": "Task 1 - Send a valid request",
+      "level_type": "TRAINING_LEVEL",
+      "order": 2,
+      "estimated_duration": 10,
+      "minimal_possible_solve_time": null,
+      "answer": "",
+      "answer_variable_name": "flag_task1",
+      "content": "Warm up by sending a **legitimate** request that the server will accept.\n\nYour uid and MAC key are in `~/hashlen/mykey.txt` (format `uid:key`). Always include `myname=<YourName>` (no spaces) in every request - the server rejects requests without it.\n\nThe MAC is `SHA256(key:R)`, where `R` is the argument part of the URL. For example:\n```\nKey:R = <key>:myname=<YourName>&uid=<uid>&lstcmd=1\nMAC   = echo -n \"<key>:myname=<YourName>&uid=<uid>&lstcmd=1\" | sha256sum\n```\nBuild the request below, including a `download` of **task1.txt**, and send it with a browser or `curl`:\n```\nhttp://www.seedlab-hashlen.com/?myname=<YourName>&uid=<uid>&lstcmd=1&download=task1.txt&mac=<mac>\n```\n\n**The flag is the value printed in the file content returned by the server.**",
+      "solution": "```\nM='myname=<YourName>&uid=<uid>&lstcmd=1&download=task1.txt'\nMAC=$(echo -n \"<key>:$M\" | sha256sum | cut -d' ' -f1)\ncurl \"http://www.seedlab-hashlen.com/?$M&mac=$MAC\"\n```",
+      "solution_penalized": true,
+      "hints": [
+        {
+          "title": "Where is my key?",
+          "content": "`cat ~/hashlen/mykey.txt`. The part before the colon is your uid, the part after is the MAC key.",
+          "hint_penalty": 0.5,
+          "order": 0
+        },
+        {
+          "title": "How do I compute the MAC?",
+          "content": "`echo -n \"<key>:<arguments>\" | sha256sum`. The `-n` matters (no trailing newline). The arguments must match the URL exactly, in the same order.",
+          "hint_penalty": 1,
+          "order": 1
+        }
+      ],
+      "incorrect_answer_limit": 10,
+      "attachments": [],
+      "max_score": 4,
+      "variant_answers": true,
+      "reference_solution": [],
+      "mitre_techniques": [],
+      "expected_commands": [],
+      "commands_required": false
+    },
+    {
+      "title": "Task 2 - Build the padding",
+      "level_type": "TRAINING_LEVEL",
+      "order": 3,
+      "estimated_duration": 15,
+      "minimal_possible_solve_time": null,
+      "answer": "",
+      "answer_variable_name": "flag_task2",
+      "content": "To extend the message you must know the SHA-256 **padding** of the original signed message.\n\nSHA-256 works on 64-byte blocks. Padding is one `0x80` byte, then `0x00` bytes, then an 8-byte big-endian length field equal to the message length **in bits**. Compute the padding for:\n```\n<key>:myname=<YourName>&uid=<uid>&lstcmd=1\n```\n(use your own key, name and uid). In a URL, each byte `\\xHH` is written `%HH`.\n\nSubmit your padding to the checker, which returns the flag if it is correct:\n```\nhttp://www.seedlab-hashlen.com/padcheck?myname=<YourName>&uid=<uid>&padding=<url-encoded-padding>\n```\n\n**The flag is the value returned by `/padcheck`.**",
+      "solution": "Let `n` = byte length of `<key>:myname=<YourName>&uid=<uid>&lstcmd=1`.\nPadding = `\\x80` + `\\x00` * ((55 - n) mod 64) + 8-byte big-endian (n*8).\n```\npython3 -c 'import struct;n=<n>;print((b\"\\x80\"+b\"\\x00\"*((55-n)%64)+struct.pack(\">Q\",n*8)).hex())'\n```\nThen turn the hex into `%HH%HH...` and send it to `/padcheck`.",
+      "solution_penalized": true,
+      "hints": [
+        {
+          "title": "What exactly gets padded?",
+          "content": "The whole string `key:message`, i.e. `<key>:myname=<YourName>&uid=<uid>&lstcmd=1`. Count its length in bytes - that is `n`.",
+          "hint_penalty": 1,
+          "order": 0
+        },
+        {
+          "title": "Padding formula",
+          "content": "One `%80`, then zeros so the total becomes a multiple of 64 leaving room for 8 length bytes: `(55 - n) mod 64` zero bytes, then the 64-bit big-endian value `n*8`.",
+          "hint_penalty": 2,
+          "order": 1
+        }
+      ],
+      "incorrect_answer_limit": 10,
+      "attachments": [],
+      "max_score": 4,
+      "variant_answers": true,
+      "reference_solution": [],
+      "mitre_techniques": [],
+      "expected_commands": [],
+      "commands_required": false
+    },
+    {
+      "title": "Task 3 - Launch the length extension attack",
+      "level_type": "TRAINING_LEVEL",
+      "order": 4,
+      "estimated_duration": 25,
+      "minimal_possible_solve_time": null,
+      "answer": "",
+      "answer_variable_name": "flag_task3",
+      "content": "Now the real attack. You have a request the **SysAdmin** sent, intercepted in `~/hashlen/captured_request.txt`:\n```\nhttp://www.seedlab-hashlen.com/?myname=SysAdmin&uid=<admin-uid>&lstcmd=1&mac=<mac>\n```\nYou do **not** know the SysAdmin's key, but the file tells you its length. Using only the captured MAC and the key length, forge a new request that appends `&download=secret.txt` and still has a valid MAC - **without** the key.\n\nUse `~/hashlen/length_ext.c` as a template: set the 8 `c.h[i]` words to the 8 32-bit words of the captured MAC, set the appended string to your extra message, and compile with `gcc length_ext.c -o length_ext -lcrypto`. Insert the padding (Task 2 method, with `n = keylen + len(message)`) between `lstcmd=1` and `&download=secret.txt` in the URL.\n\n**The flag is the value inside secret.txt returned by the server.**",
+      "solution": "1. Split the captured 64-hex MAC into 8 words and load them into `c.h[0..7]`.\n2. Set `SHA256_Update(&c, \"&download=secret.txt\", 20)`.\n3. `n = keylen + len(\"myname=SysAdmin&uid=<admin-uid>&lstcmd=1\")`; build padding for that `n`.\n4. URL: `/?myname=SysAdmin&uid=<admin-uid>&lstcmd=1<%-encoded padding>&download=secret.txt&mac=<program output>`.",
+      "solution_penalized": true,
+      "hints": [
+        {
+          "title": "What goes into c.h[0..7]?",
+          "content": "The captured MAC is 64 hex chars = 8 groups of 8 hex chars. Each group is one `c.h[i]`, e.g. `c.h[0]=htole32(0x<first 8 hex>)`.",
+          "hint_penalty": 1,
+          "order": 0
+        },
+        {
+          "title": "What length for the padding?",
+          "content": "The server already hashed `key:message`. So the padded length is `n = keylen + len(\":\") ... ` - precisely `len(key) + 1 + len(\"myname=SysAdmin&uid=<admin-uid>&lstcmd=1\")`. The key length is given in the captured file.",
+          "hint_penalty": 2,
+          "order": 1
+        },
+        {
+          "title": "Where does the padding go in the URL?",
+          "content": "Right after `lstcmd=1` and before `&download=secret.txt`, URL-encoded as `%HH`. The appended string in the C program must be exactly `&download=secret.txt`.",
+          "hint_penalty": 2,
+          "order": 2
+        }
+      ],
+      "incorrect_answer_limit": 10,
+      "attachments": [],
+      "max_score": 8,
+      "variant_answers": true,
+      "reference_solution": [],
+      "mitre_techniques": [],
+      "expected_commands": [],
+      "commands_required": false
+    },
+    {
+      "title": "Task 4 - Fix it with HMAC",
+      "level_type": "TRAINING_LEVEL",
+      "order": 5,
+      "estimated_duration": 15,
+      "minimal_possible_solve_time": null,
+      "answer": "",
+      "answer_variable_name": "flag_task4",
+      "content": "The developer shipped a fixed server at `/v2/` that verifies the MAC with **HMAC-SHA256** instead of `SHA256(key:message)`. Confirm your Task 3 forge no longer works against `/v2/`, then send a correct HMAC request that downloads **task4.txt**.\n\nCompute `HMAC-SHA256(key, message)` over the argument string:\n```python\nimport hmac, hashlib\nmac = hmac.new(key.encode(), message.encode('utf-8','surrogateescape'), hashlib.sha256).hexdigest()\n```\nSend:\n```\nhttp://www.seedlab-hashlen.com/v2/?myname=<YourName>&uid=<uid>&lstcmd=1&download=task4.txt&mac=<hmac>\n```\nIn your report, explain in one or two sentences **why** the length extension attack fails against HMAC.\n\n**The flag is the value inside task4.txt returned by `/v2/`.**",
+      "solution": "```\nM='myname=<YourName>&uid=<uid>&lstcmd=1&download=task4.txt'\nMAC=$(python3 -c \"import hmac,hashlib;print(hmac.new(b'<key>',b'$M',hashlib.sha256).hexdigest())\")\ncurl \"http://www.seedlab-hashlen.com/v2/?$M&mac=$MAC\"\n```\nHMAC hashes `key` into the inner and outer blocks (`H((k^opad)||H((k^ipad)||m))`); the attacker cannot extend the inner state without the key, so a forged tag fails.",
+      "solution_penalized": true,
+      "hints": [
+        {
+          "title": "Which endpoint?",
+          "content": "Use `/v2/` (note the trailing path). The same key from `mykey.txt` still applies.",
+          "hint_penalty": 0.5,
+          "order": 0
+        },
+        {
+          "title": "HMAC in one line",
+          "content": "`python3 -c \"import hmac,hashlib;print(hmac.new(b'<key>', b'<message>', hashlib.sha256).hexdigest())\"` where `<message>` is the argument string after the `?`.",
+          "hint_penalty": 1,
+          "order": 1
+        }
+      ],
+      "incorrect_answer_limit": 10,
+      "attachments": [],
+      "max_score": 4,
+      "variant_answers": true,
+      "reference_solution": [],
+      "mitre_techniques": [],
+      "expected_commands": [],
+      "commands_required": false
+    }
+  ],
+  "estimated_duration": 80,
+  "variant_sandboxes": true
+}

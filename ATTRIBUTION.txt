@@ -1,0 +1,11 @@
+This scenario is adapted from the SEED Labs "Hash Length Extension Attack Lab"
+Copyright (c) 2019 Wenliang Du, licensed under CC BY-NC-SA 4.0 (https://seedsecuritylabs.org).
+The Flask server code (image_flask/app) originates from that lab and was modified for CyberRangeCZ
+(per-uid download ACL, /padcheck and /v2 HMAC endpoints, systemd service, per-sandbox keys/flags).
+
+Scenario structure based on the CyberRangeCZ "junior-hacker" game design:
+junior-hacker (https://gitlab.ics.muni.cz/muni-kypo-trainings/games/junior-hacker)
+Cybersecurity Laboratory, Faculty of Informatics, Masaryk University.
+
+Because the SEED lab is NonCommercial-ShareAlike, use this scenario for non-commercial teaching and
+keep this attribution intact.

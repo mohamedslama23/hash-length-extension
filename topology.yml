@@ -1,0 +1,56 @@
+name: hash-length-extension
+
+# NOTE: set `image:` below to the exact name of your SEED image in Glance
+#       (the same image on both attacker and server), and `mgmt_user:` to that
+#       image's cloud-init / management user.
+
+hosts:
+  - name: attacker
+    base_box:
+      image: seed-ubuntu-20.04
+      mgmt_user: ubuntu
+    flavor: m1.medium
+
+  - name: server
+    base_box:
+      image: seed-ubuntu-20.04
+      mgmt_user: ubuntu
+    flavor: m1.medium
+
+routers:
+  - name: router
+    base_box:
+      image: debian-12-x86_64
+      mgmt_user: debian
+    flavor: m1.medium
+
+wan:
+  name: internet-connection
+  cidr: 100.100.100.0/24
+
+networks:
+  # Kept off the SEED docker subnet (10.9.0.0/24) to avoid any route clash
+  - name: server-switch
+    cidr: 10.1.26.0/24
+    accessible_by_user: False
+  - name: attacker-switch
+    cidr: 10.1.27.0/24
+
+net_mappings:
+  - host: attacker
+    network: attacker-switch
+    ip: 10.1.27.23
+
+  - host: server
+    network: server-switch
+    ip: 10.1.26.80
+
+router_mappings:
+  - router: router
+    network: server-switch
+    ip: 10.1.26.1
+  - router: router
+    network: attacker-switch
+    ip: 10.1.27.1
+
+groups: []

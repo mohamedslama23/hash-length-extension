@@ -1,0 +1,31 @@
+# APG variables: generated randomly for EACH sandbox (one sandbox per student).
+# Every flag is different per student -> answers cannot be shared.
+
+# uid of the student's own account on the MAC server (key is given to the student)
+student_uid:
+  type: port
+  min: 1001
+  max: 1999
+
+# uid of the "SysAdmin" account (key is NOT given; only a captured request + key length)
+admin_uid:
+  type: port
+  min: 2001
+  max: 2999
+
+# Flags (submitted as variant answers)
+flag_task1:
+  type: password
+  length: 16
+
+flag_task2:
+  type: password
+  length: 16
+
+flag_task3:
+  type: password
+  length: 16
+
+flag_task4:
+  type: password
+  length: 16

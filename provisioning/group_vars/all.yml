@@ -1,0 +1,21 @@
+# Per-sandbox values. APG variables (variables.yml) override the defaults;
+# defaults are only for local testing without APG.
+lab_student_uid: "{{ student_uid | default(1001) }}"
+lab_admin_uid:   "{{ admin_uid | default(2042) }}"
+
+lab_flag1: "{{ flag_task1 | default('localTestFlag001') }}"
+lab_flag2: "{{ flag_task2 | default('localTestFlag002') }}"
+lab_flag3: "{{ flag_task3 | default('localTestFlag003') }}"
+lab_flag4: "{{ flag_task4 | default('localTestFlag004') }}"
+
+# MAC keys derived from the per-sandbox flags -> unique per sandbox, identical on both hosts.
+lab_student_key: "{{ (lab_flag1 ~ '-student-key') | hash('sha256') | truncate(8, True, '', 0) }}"
+lab_admin_key:   "{{ (lab_flag3 ~ '-admin-key')   | hash('sha256') | truncate(12, True, '', 0) }}"
+lab_admin_key_len: 12
+
+lab_hostname: www.seedlab-hashlen.com
+lab_server_ip: 10.1.26.80       # server host IP; docker publishes port 80 here
+
+lab_admin_name: SysAdmin
+lab_admin_msg: "myname={{ lab_admin_name }}&uid={{ lab_admin_uid }}&lstcmd=1"
+lab_admin_mac: "{{ (lab_admin_key ~ ':' ~ lab_admin_msg) | hash('sha256') }}"

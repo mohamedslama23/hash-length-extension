@@ -1,0 +1,5 @@
+---
+- name: Install common tools
+  apt:
+    name: [net-tools, curl]
+    update_cache: yes
