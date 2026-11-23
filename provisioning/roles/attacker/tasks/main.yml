@@ -10,42 +10,42 @@
 
 - name: Create lab directory
   file:
-    path: /home/user/hashlen
+    path: /home/seed/hashlen
     state: directory
-    owner: user
-    group: user
+    owner: seed
+    group: seed
     mode: '0755'
 
 - name: Student key file
   copy:
-    dest: /home/user/hashlen/mykey.txt
+    dest: /home/seed/hashlen/mykey.txt
     content: "{{ lab_student_uid }}:{{ lab_student_key }}\n"
-    owner: user
-    group: user
+    owner: seed
+    group: seed
     mode: '0644'
 
 - name: Captured SysAdmin request (Task 3)
   copy:
-    dest: /home/user/hashlen/captured_request.txt
+    dest: /home/seed/hashlen/captured_request.txt
     content: |
       # Intercepted request from the SysAdmin. The SysAdmin's MAC key is {{ lab_admin_key_len }} characters long.
       http://{{ lab_hostname }}/?{{ lab_admin_msg }}&mac={{ lab_admin_mac }}
-    owner: user
-    group: user
+    owner: seed
+    group: seed
     mode: '0644'
 
 - name: Example program and README
   copy:
     src: length_ext.c
-    dest: /home/user/hashlen/length_ext.c
-    owner: user
-    group: user
+    dest: /home/seed/hashlen/length_ext.c
+    owner: seed
+    group: seed
     mode: '0644'
 
 - name: README
   template:
     src: README.txt.j2
-    dest: /home/user/hashlen/README.txt
-    owner: user
-    group: user
+    dest: /home/seed/hashlen/README.txt
+    owner: seed
+    group: seed
     mode: '0644'

@@ -7,13 +7,13 @@ name: hash-length-extension
 hosts:
   - name: attacker
     base_box:
-      image: seed-ubuntu-20.04
+      image: seed
       mgmt_user: ubuntu
     flavor: m1.medium
 
   - name: server
     base_box:
-      image: seed-ubuntu-20.04
+      image: seed
       mgmt_user: ubuntu
     flavor: m1.medium
 
