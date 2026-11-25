@@ -31,10 +31,10 @@ wan:
 networks:
   # Kept off the SEED docker subnet (10.9.0.0/24) to avoid any route clash
   - name: server-switch
-    cidr: 10.1.26.0/24
+    cidr: 10.1.26.0/16
     accessible_by_user: False
   - name: attacker-switch
-    cidr: 10.1.27.0/24
+    cidr: 10.1.27.0/16
 
 net_mappings:
   - host: attacker
