@@ -28,6 +28,14 @@
     dest: /root/Labsetup/image_flask/app/www/config.py
     mode: '0644'
 
+- name: Ensure the LabHome directory exists (not tracked by git because it is empty)
+  file:
+    path: /root/Labsetup/image_flask/app/LabHome
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
 - name: Write per-sandbox MAC keys (student key given; SysAdmin key hidden)
   copy:
     dest: /root/Labsetup/image_flask/app/LabHome/key.txt
