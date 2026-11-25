@@ -14,7 +14,7 @@ lab_admin_key:   "{{ (lab_flag3 ~ '-admin-key')   | hash('sha256') | truncate(12
 lab_admin_key_len: 12
 
 lab_hostname: www.seedlab-hashlen.com
-lab_server_ip: 10.1.26.80       # server host IP; docker publishes port 80 here
+lab_server_ip: 10.1.26.20       # server host IP; docker publishes port 80 here
 
 lab_admin_name: SysAdmin
 lab_admin_msg: "myname={{ lab_admin_name }}&uid={{ lab_admin_uid }}&lstcmd=1"
